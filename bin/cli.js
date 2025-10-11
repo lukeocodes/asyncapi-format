@@ -22,6 +22,8 @@ program
   .option('-c, --configFile <configFile>', 'the file with the AsyncAPI-format CLI options')
   .option('--no-sort', `don't sort the AsyncAPI file`)
   .option('--sortComponentsFile <sortComponentsFile>', 'the file with components to sort alphabetically')
+  .option('--bundle', 'bundle the local $ref references in the AsyncAPI document', false)
+  .option('--split', 'split the AsyncAPI document into a multi-file structure', false)
   .option('--lineWidth <lineWidth>', 'max line width of YAML output', -1)
   .option('--rename <oaTitle>', 'overwrite the title in the AsyncAPI document')
   .option('--json', 'print the file to stdout as JSON')
@@ -66,6 +68,11 @@ async function run(asFile, options) {
         configFileOptions.sort = !(configFileOptions['no-sort'])
         delete configFileOptions['no-sort'];
       }
+      // Bundle option handling (kept for backwards compatibility with old configs)
+      if (configFileOptions['no-bundle'] && configFileOptions['no-bundle'] === true) {
+        configFileOptions.bundle = false;
+        delete configFileOptions['no-bundle'];
+      }
       infoOut(`- Config file:\t\t${options.configFile}`) // LOG - config file
       options = Object.assign({}, options, configFileOptions);
     } catch (err) {
@@ -76,6 +83,8 @@ async function run(asFile, options) {
       process.exit(1)
     }
   }
+  
+  // Bundle is now opt-in (default: false for backwards compatibility)
 
   // LOG - Render info table with options
   outputLogOptions = infoTable(options, options.verbose)
@@ -148,8 +157,9 @@ async function run(asFile, options) {
 
   infoOut(`- Input file:\t\t${asFile}`) // LOG - Input file
 
-  // Get
-  let res = jy.load(fs.readFileSync(asFile, 'utf8'));
+  // Parse input file with optional bundling (default: false for backwards compatibility)
+  let fileOptions = {bundle: options.bundle === true};
+  let res = await asyncapiFormat.parseFile(asFile, fileOptions);
   let o = {};
 
   // Filter AsyncAPI document
@@ -181,24 +191,34 @@ async function run(asFile, options) {
     debugOut(`- asyncapi.title renamed to: "${options.rename}"`, options.verbose) // LOG - Rename title
   }
 
-  if ((options.output && options.output.indexOf('.json') >= 0) || options.json) {
-    o = JSON.stringify(res, null, 2);
-  } else {
-    let lineWidth = (options.lineWidth) ? options.lineWidth : 160
-    o = jy.dump(res, {lineWidth: lineWidth});
-  }
-
   if (options.output) {
-    try {
-      fs.writeFileSync(options.output, o, 'utf8');
-      infoOut(`- Output file:\t\t${options.output}`) // LOG - config file
-    } catch (err) {
-      console.error('\x1b[31m', `Output file error - no such file or directory "${options.output}"`)
-      if (options.verbose >= 1) {
-        console.error(err)
+    if (options.split !== true) {
+      try {
+        // Write AsyncAPI string to single file
+        await asyncapiFormat.writeFile(options.output, res, options);
+        infoOut(`- Output file:\t\t${options.output}`) // LOG - config file
+      } catch (err) {
+        console.error('\x1b[31m', `Output file error - no such file or directory "${options.output}"`)
+        if (options.verbose >= 1) {
+          console.error(err)
+        }
+      }
+    } else {
+      try {
+        // Write Split files
+        await asyncapiFormat.asyncapiSplit(res, options);
+        infoOut(`- Output location:\t${options.output}`) // LOG - config file
+      } catch (err) {
+        console.error('\x1b[31m', `Split error - no such file or directory "${options.output}"`)
+        if (options.verbose >= 1) {
+          console.error(err)
+        }
       }
     }
   } else {
+    // Stringify AsyncAPI object
+    o = await asyncapiFormat.stringify(res, options);
+    // Print AsyncAPI string to stdout
     console.log(o);
   }
 
