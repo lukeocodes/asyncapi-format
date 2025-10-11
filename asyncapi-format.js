@@ -19,6 +19,9 @@ const {
   trainCase,
   upperCase
 } = require("case-anything");
+const {parseFile, writeFile, stringify, detectFormat, parseString, readFile} = require('./utils/file');
+const {writeChannels, writeComponents, writeSplitAsyncAPISpec} = require('./utils/split');
+const {dirname, extname} = require('path');
 
 /**
  * Sort Object by Key or list of names
@@ -609,6 +612,31 @@ async function asyncapiRename(asObj, options) {
 }
 
 /**
+ * Split the AsyncAPI document into a multi-file structure
+ * @param {object} asObj AsyncAPI document
+ * @param {object} options Split options
+ * @returns {Promise<void>}
+ */
+async function asyncapiSplit(asObj, options = {}) {
+  if (!options.output) {
+    throw new Error('Output is required');
+  }
+
+  options.outputDir = dirname(options.output);
+  options.extension = extname(options.output).substring(1);
+
+  if (asObj?.components) {
+    await writeComponents(asObj.components, options);
+  }
+
+  if (asObj?.channels) {
+    await writeChannels(asObj.channels, options);
+  }
+
+  await writeSplitAsyncAPISpec(asObj, options);
+}
+
+/**
  * Value replacement function
  * @param {string} valueAsString
  * @param {array} replacements
@@ -752,5 +780,12 @@ module.exports = {
   asyncapiSort: asyncapiSort,
   asyncapiChangeCase: asyncapiChangeCase,
   asyncapiRename: asyncapiRename,
-  changeCase: changeCase
+  asyncapiSplit: asyncapiSplit,
+  changeCase: changeCase,
+  readFile: readFile,
+  parseFile: parseFile,
+  parseString: parseString,
+  stringify: stringify,
+  writeFile: writeFile,
+  detectFormat: detectFormat
 };
