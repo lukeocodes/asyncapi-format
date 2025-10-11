@@ -83,8 +83,6 @@ async function run(asFile, options) {
       process.exit(1)
     }
   }
-  
-  // Bundle is now opt-in (default: false for backwards compatibility)
 
   // LOG - Render info table with options
   outputLogOptions = infoTable(options, options.verbose)
