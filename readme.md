@@ -27,6 +27,8 @@ flags, tags, operations and operationID's.
 * [AsyncAPI filter options](#asyncapi-filter-options)
 * [CLI sort usage](#cli-sort-usage)
 * [CLI filter usage](#cli-filter-usage)
+* [CLI casing usage](#cli-casing-usage)
+* [CLI bundle & split usage](#cli-bundle--split-usage)
 * [CLI rename usage](#cli-rename-usage)
 * [CLI configuration usage](#cli-configuration-usage)
 * [Credits](#credits)
@@ -57,6 +59,8 @@ or for generating event producers/consumers.
 - [x] Rename the AsyncAPI title
 - [x] Support AsyncAPI documents in JSON format
 - [x] Support AsyncAPI documents in YAML format
+- [x] Bundle local $ref references in the AsyncAPI document
+- [x] Split the AsyncAPI document into a multi-file structure
 - [x] Format via CLI
 - [x] Format via config files
 - [x] Use as a Module
@@ -115,6 +119,9 @@ Options:
   --no-sort             Don't sort the AsyncAPI file                         [boolean]
   --sortComponentsFile  The file with components to sort alphabetically         [path]
   
+  --bundle              Bundle the local $ref references in the AsyncAPI document [boolean]
+  --split               Split the AsyncAPI document into a multi-file structure [boolean]
+  
   --rename              Rename the AsyncAPI title                             [string]
 
   --configFile          The file with the AsyncAPI-format CLI options           [path]
@@ -139,6 +146,8 @@ Options:
 | --casingFile         | -c            | the file to specify casing setting                                          | path to file |                            | optional  |
 | --no-sort            |               | don't sort the AsyncAPI file                                                | boolean      | FALSE                      | optional  |
 | --sortComponentsFile |               | sort the items of the components (schemas, parameters, ...) by alphabet     | path to file | defaultSortComponents.json | optional  |
+| --bundle             |               | bundle the local $ref references in the AsyncAPI document                   | boolean      | FALSE                      | optional  |
+| --split              |               | split the AsyncAPI document into a multi-file structure                     | boolean      | FALSE                      | optional  |
 | --rename             |               | rename the AsyncAPI title                                                   | string       |                            | optional  |
 | --configFile         | -c            | the file with all the format config options                                 | path to file |                            | optional  |
 | --lineWidth          |               | max line width of YAML output                                               | number       | -1 (Infinity)              | optional  |
@@ -704,6 +713,67 @@ operationIds:
     - dimLight
     - turnOff
 ```
+
+## CLI bundle & split usage
+
+- **Bundling**: Optionally create a self-contained AsyncAPI file (using `--bundle`) that can be used for documentation generation or code generation tools that don't support external references. By default, `$ref` references are preserved for backwards compatibility.
+
+- **Splitting**: Generate a modular AsyncAPI structure during development or testing, making it easier to manage changes to individual channels or components without altering the entire document.
+
+### Splitting the AsyncAPI Document
+
+The `--split` option splits the AsyncAPI document into a modular multi-file structure. This structure makes it easier to manage larger specifications by separating channels and components (schemas, messages, parameters, ...) into individual files.
+
+Example: Splitting the Document
+
+```shell
+$ asyncapi-format asyncapi.json -o ./asyncapi-split/asyncapi.yaml --split
+```
+
+This command will take the `asyncapi.json` and split it into multiple files, stored under the `./asyncapi-split/` directory.
+
+The resulting structure might look like this:
+
+```bash
+./asyncapi-split/
+├── asyncapi.yaml
+├── channels/
+│   ├── smartylighting_streetlights_1_0_event_streetlightId_lighting_measured.yaml
+│   └── smartylighting_streetlights_1_0_action_streetlightId_turn_onoff.yaml
+├── components/
+├── schemas/
+│   ├── lightMeasuredPayload.yaml
+│   └── turnOnOffPayload.yaml
+├── messages/
+│   ├── lightMeasured.yaml
+│   └── turnOnOff.yaml
+├── parameters/
+│   └── streetlightId.yaml
+```
+
+The main `asyncapi.yaml` file will contain references to these newly created files using `$ref`, making the structure modular and easier to navigate.
+
+### Bundling the AsyncAPI Document
+
+The `--bundle` option allows you to bundle local `$ref` references into a single, self-contained AsyncAPI document.
+
+By default, `asyncapi-format` preserves all `$ref` references as they appear in the original document, maintaining backwards compatibility with previous versions. When you need to create a fully self-contained document (useful for documentation generation or code generation tools that don't support external references), you can use the `--bundle` option.
+
+Example: Default Behavior (No Bundling)
+```shell
+$ asyncapi-format input.json -o asyncapi.json
+```
+
+This example produces `asyncapi.json` with all `$ref` references preserved as they are in the original document.
+This is the default behaviour for backwards compatibility.
+
+Example: Bundling References
+
+```shell
+$ asyncapi-format asyncapi.json -o bundled-asyncapi.json --bundle
+```
+
+In this case, the resulting `bundled-asyncapi.json` will have all local `$ref` references resolved and bundled into a single file, creating a self-contained AsyncAPI document.
 
 ## CLI rename usage
 
