@@ -1,0 +1,19 @@
+asyncapi: 2.6.0
+info:
+  title: Test Bundle API
+  version: 1.0.0
+channels:
+  user/created:
+    subscribe:
+      message:
+        payload:
+          $ref: "#/components/schemas/User"
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
