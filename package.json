@@ -30,6 +30,8 @@
     "asyncapi-format.js",
     "util-log-output.js",
     "util-types.js",
+    "utils/file.js",
+    "utils/split.js",
     "defaultSort.json",
     "defaultFilter.json",
     "defaultSortComponents.json",
@@ -46,6 +48,7 @@
     "release": "np --branch main"
   },
   "dependencies": {
+    "api-ref-bundler": "^0.4.3",
     "case-anything": "^2.1.5",
     "commander": "^7.1.0",
     "js-yaml": "^4.1.0",
