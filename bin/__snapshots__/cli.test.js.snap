@@ -1,5 +1,15 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`asyncapi-format CLI command should bundle external $refs 1`] = `
+"================================================================================
+AsyncAPI-Format CLI settings:
+- Input file:		test/yaml-default/input.yaml
+[32m================================================================================[0m
+[32m✅  AsyncAPI formatted successfully[0m
+[32m================================================================================[0m
+"
+`;
+
 exports[`asyncapi-format CLI command should output the help 1`] = `
 "Usage: cli <file> [options]
 
@@ -13,6 +23,8 @@ Options:
   -c, --configFile <configFile>              the file with the AsyncAPI-format CLI options
   --no-sort                                  don't sort the AsyncAPI file
   --sortComponentsFile <sortComponentsFile>  the file with components to sort alphabetically
+  --bundle                                   bundle the local $ref references in the AsyncAPI document (default: false)
+  --split                                    split the AsyncAPI document into a multi-file structure (default: false)
   --lineWidth <lineWidth>                    max line width of YAML output (default: -1)
   --rename <oaTitle>                         overwrite the title in the AsyncAPI document
   --json                                     print the file to stdout as JSON
