@@ -48,7 +48,7 @@
     "release": "np --branch main"
   },
   "dependencies": {
-    "api-ref-bundler": "^0.4.3",
+    "api-ref-bundler": "github:lukeocodes/api-ref-bundler#lo/asyncapi-v3",
     "case-anything": "^2.1.5",
     "commander": "^7.1.0",
     "js-yaml": "^4.1.0",
